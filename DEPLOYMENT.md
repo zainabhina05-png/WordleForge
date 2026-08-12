@@ -78,7 +78,8 @@ NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
 NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/dashboard
 NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/dashboard
 
-# Application
+# Application - IMPORTANT: Include protocol (https://)
+# Do NOT use just "your-domain.vercel.app" - this will cause build errors
 NEXT_PUBLIC_APP_URL=https://your-domain.vercel.app
 NODE_ENV=production
 
@@ -86,6 +87,8 @@ NODE_ENV=production
 NEXT_PUBLIC_SENTRY_DSN=https://...
 SENTRY_AUTH_TOKEN=...
 ```
+
+**⚠️ CRITICAL**: The `NEXT_PUBLIC_APP_URL` variable MUST include the protocol (`https://`). Without it, the build will fail with "Invalid URL" error.
 
 ### Build Settings
 - Framework Preset: Next.js

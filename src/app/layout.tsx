@@ -23,6 +23,19 @@ const inter = Inter({
   display: 'swap',
 });
 
+// Helper to build valid URL for metadata
+function getMetadataBaseUrl(): URL {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'localhost:3000';
+  
+  // If no protocol, add https:// for production, http:// for local
+  if (!appUrl.startsWith('http')) {
+    const protocol = appUrl.includes('localhost') || appUrl.includes('127.0.0.1') ? 'http' : 'https';
+    return new URL(`${protocol}://${appUrl}`);
+  }
+  
+  return new URL(appUrl);
+}
+
 export const metadata: Metadata = {
   title: 'WordForge - Infinite Word Puzzle Platform',
   description: 'A modern, infinite word puzzle platform with unlimited gameplay',
@@ -32,7 +45,7 @@ export const metadata: Metadata = {
   icons: {
     icon: '/favicon.svg',
   },
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL?.startsWith('http') ? process.env.NEXT_PUBLIC_APP_URL : `https://${process.env.NEXT_PUBLIC_APP_URL || 'localhost:3000'}`),
+  metadataBase: getMetadataBaseUrl(),
   openGraph: {
     type: 'website',
     locale: 'en_US',

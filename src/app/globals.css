@@ -82,19 +82,20 @@
 
 /* ── Custom Cursor – Little Phantom ── */
 /* Using local SVG cursor hosted in public/ */
+/* Hotspot: 6 6 (top-left corner for default cursor) */
 
 * {
-  cursor: url('/phantom-cursor.svg') 4 4, auto !important;
+  cursor: url('/phantom-cursor.svg') 6 6, auto !important;
 }
 
 a, button, [role="button"], label, select,
 [type="button"], [type="submit"], [type="reset"],
 .btn-pill, [class*="cursor-pointer"] {
-  cursor: url('/phantom-cursor.svg') 10 0, pointer !important;
+  cursor: url('/phantom-cursor.svg') 12 2, pointer !important;
 }
 
 input, textarea, [contenteditable] {
-  cursor: url('/phantom-cursor.svg') 4 4, text !important;
+  cursor: url('/phantom-cursor.svg') 6 6, text !important;
 }
 
 @layer utilities {
