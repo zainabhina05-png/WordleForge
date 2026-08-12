@@ -80,20 +80,9 @@
   }
 }
 
-/* ── Custom Cursor ── */
-*, *::before, *::after {
-  cursor: url('/cursors/slime-cursor.png') 4 4, auto;
-}
-
-a, button, [role="button"], label, select,
-[type="button"], [type="submit"], [type="reset"],
-.btn-pill, [class*="cursor-pointer"] {
-  cursor: url('/cursors/slime-pointer.png') 12 4, pointer;
-}
-
-input, textarea, [contenteditable] {
-  cursor: url('/cursors/slime-cursor.png') 4 4, text;
-}
+/* ── Custom Cursor via CDN ── */
+/* Little Phantom animated cursor is loaded via <link> in layout.tsx */
+/* The CDN stylesheet applies the cursor automatically */
 
 @layer utilities {
   .text-balance {
