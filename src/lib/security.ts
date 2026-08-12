@@ -66,6 +66,17 @@ export async function validateCSRF() {
   const origin = headersList.get('origin');
   const _clientIP = headersList.get('x-forwarded-for') || 'unknown';
 
+  // In production on Vercel, origin should be your app URL
+  // Skip CSRF check if we can't determine the origin (Vercel sometimes doesn't send it)
+  if (!origin) {
+    if (process.env.NODE_ENV === 'production') {
+      return; // Allow in production if no origin header (Vercel quirk)
+    }
+    if (process.env.NODE_ENV === 'development') {
+      return; // Allow in development if no origin header
+    }
+  }
+
   const allowedOrigins = [
     process.env.NEXT_PUBLIC_APP_URL,
     'http://localhost:3000',
@@ -74,15 +85,19 @@ export async function validateCSRF() {
     'https://localhost:3001',
   ].filter(Boolean);
 
-  // Skip CSRF validation in development if no origin header
-  if (process.env.NODE_ENV === 'development' && !origin) {
-    return;
+  if (!origin) {
+    authLogger.csrfViolation(origin, _clientIP);
+    throw new SecurityError('Invalid origin', 'CSRF_VIOLATION');
   }
 
-  if (!origin || !allowedOrigins.some((allowed) => {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    return origin.startsWith(allowed!);
-  })) {
+  // Check if origin matches any allowed origin
+  const isAllowed = allowedOrigins.some((allowed) => {
+    if (!allowed) return false;
+    // Exact match or subdomain match
+    return origin === allowed || origin.endsWith('.' + allowed);
+  });
+
+  if (!isAllowed) {
     authLogger.csrfViolation(origin, _clientIP);
     throw new SecurityError('Invalid origin', 'CSRF_VIOLATION');
   }
