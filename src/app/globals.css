@@ -1,0 +1,200 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Playfair+Display:ital,wght@0,400;0,500;1,400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* ── Structured Design Tokens ── */
+    --color-putty: #c4c3b6;
+    --color-ink: #000000;
+    --color-bone: #e7e5e4;
+    --color-chalk: #ebebeb;
+    --color-vellum: #dfdcd5;
+    --color-graphite: #595855;
+    --color-ash: #808080;
+    --color-paper: #ffffff;
+
+    /* Typography */
+    --font-davinci: 'Playfair Display', Georgia, serif;
+    --font-helvetica-now: 'Inter', system-ui, sans-serif;
+
+    /* Spacing */
+    --spacing-4: 4px;
+    --spacing-16: 16px;
+    --spacing-20: 20px;
+    --spacing-28: 28px;
+    --spacing-32: 32px;
+    --spacing-36: 36px;
+    --spacing-40: 40px;
+    --spacing-52: 52px;
+    --spacing-60: 60px;
+    --spacing-96: 96px;
+    --spacing-168: 168px;
+    --section-gap: 80px;
+    --card-padding: 24px;
+    --element-gap: 6px;
+
+    /* Border Radius */
+    --radius-sm: 2px;
+    --radius-cards: 9px;
+    --radius-buttons: 28.8px;
+    --radius: 9px;
+
+    /* shadcn-compatible variable aliases */
+    --background: 196 192 182; /* putty as HSL approximation for shadcn */
+    --foreground: 0 0% 0%;
+    --card: 231 9% 92%;
+    --card-foreground: 0 0% 0%;
+    --popover: 231 9% 92%;
+    --popover-foreground: 0 0% 0%;
+    --primary: 0 0% 0%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 91%;
+    --secondary-foreground: 0 0% 0%;
+    --muted: 0 0% 92%;
+    --muted-foreground: 29 4% 35%;
+    --accent: 0 0% 91%;
+    --accent-foreground: 0 0% 0%;
+    --destructive: 0 60% 28%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 34 14% 86%;
+    --input: 34 14% 86%;
+    --ring: 0 0% 0%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-vellum;
+  }
+  body {
+    @apply bg-putty text-ink font-sans antialiased overflow-x-hidden;
+  }
+  html {
+    @apply bg-putty overflow-x-hidden;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif text-ink;
+  }
+}
+
+/* ── Custom Cursor ── */
+*, *::before, *::after {
+  cursor: url('/cursors/slime-cursor.png') 4 4, auto;
+}
+
+a, button, [role="button"], label, select,
+[type="button"], [type="submit"], [type="reset"],
+.btn-pill, [class*="cursor-pointer"] {
+  cursor: url('/cursors/slime-pointer.png') 12 4, pointer;
+}
+
+input, textarea, [contenteditable] {
+  cursor: url('/cursors/slime-cursor.png') 4 4, text;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Structured pill button */
+  .btn-pill {
+    background: var(--color-ink);
+    color: var(--color-paper);
+    font-family: var(--font-helvetica-now);
+    font-size: 12px;
+    font-weight: 400;
+    padding: 9px 17px;
+    border-radius: 28.8px;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+  }
+  .btn-pill:hover {
+    opacity: 0.8;
+  }
+
+  /* Structured ghost link */
+  .link-ghost {
+    color: var(--color-ink);
+    font-family: var(--font-helvetica-now);
+    font-size: 12px;
+    font-weight: 400;
+    text-decoration: none;
+    border-radius: 2px;
+  }
+  .link-ghost:hover {
+    text-decoration: underline;
+  }
+
+  /* Logo monogram circle */
+  .logo-mark {
+    width: 32px;
+    height: 32px;
+    border: 1.5px solid var(--color-ink);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-davinci);
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--color-ink);
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  /* Lenis smooth scroll */
+  html.lenis, html.lenis body {
+    height: auto;
+  }
+  .lenis.lenis-smooth {
+    scroll-behavior: auto !important;
+  }
+  .lenis.lenis-smooth [data-lenis-prevent] {
+    overscroll-behavior: contain;
+  }
+  .lenis.lenis-stopped {
+    overflow: hidden;
+  }
+  .lenis.lenis-scrolling iframe {
+    pointer-events: none;
+  }
+
+  /* Marquee animation */
+  @keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+  .animate-marquee {
+    animation: marquee 30s linear infinite;
+  }
+
+  /* Hide scrollbar for thumbnail strip */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Film grain overlay — Nudot-style texture */
+  .grain-overlay {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-size: 180px 180px;
+    animation: grain-shift 0.5s steps(6) infinite;
+  }
+
+  @keyframes grain-shift {
+    0%, 100% { transform: translate(0, 0); }
+    25% { transform: translate(-0.5%, -0.5%); }
+    50% { transform: translate(0.5%, 0.3%); }
+    75% { transform: translate(-0.3%, 0.5%); }
+  }
+}
+
