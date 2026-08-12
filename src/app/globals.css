@@ -80,23 +80,21 @@
   }
 }
 
-/* ── Custom Cursor via CDN ── */
-/* Little Phantom animated cursor - FORCED */
-@import url('https://cdn.cursors-4u.net/cursors/animated/little-phantom-set-text-d1af529f-48.css');
+/* ── Custom Cursor – Little Phantom ── */
+/* Using local SVG cursor hosted in public/ */
 
-/* Force phantom cursor on all elements - override any previous cursor definitions */
 * {
-  cursor: url('https://cdn.cursors-4u.net/cursor.php?name=little-phantom-set-text') auto !important;
+  cursor: url('/phantom-cursor.svg') 4 4, auto !important;
 }
 
 a, button, [role="button"], label, select,
 [type="button"], [type="submit"], [type="reset"],
 .btn-pill, [class*="cursor-pointer"] {
-  cursor: url('https://cdn.cursors-4u.net/cursor.php?name=little-phantom-set-text') pointer !important;
+  cursor: url('/phantom-cursor.svg') 10 0, pointer !important;
 }
 
 input, textarea, [contenteditable] {
-  cursor: url('https://cdn.cursors-4u.net/cursor.php?name=little-phantom-set-text') text !important;
+  cursor: url('/phantom-cursor.svg') 4 4, text !important;
 }
 
 @layer utilities {

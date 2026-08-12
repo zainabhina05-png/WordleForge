@@ -60,10 +60,6 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en" className={`${playfair.variable} ${inter.variable}`} suppressHydrationWarning>
-        <head>
-          {/* Little Phantom Text animated cursor */}
-          <link rel="stylesheet" href="https://cdn.cursors-4u.net/cursors/animated/little-phantom-set-text-d1af529f-48.css" />
-        </head>
         <body className="min-h-screen bg-gray-900 font-sans antialiased text-gray-100">
           <Providers>
             {children}
