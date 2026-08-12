@@ -81,8 +81,8 @@
 }
 
 /* ── Custom Cursor via CDN ── */
-/* Little Phantom animated cursor is loaded via <link> in layout.tsx */
-/* The CDN stylesheet applies the cursor automatically */
+/* Little Phantom animated cursor */
+@import url('https://cdn.cursors-4u.net/cursors/animated/little-phantom-set-text-d1af529f-48.css');
 
 @layer utilities {
   .text-balance {
