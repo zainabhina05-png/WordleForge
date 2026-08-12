@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: wordforge_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: wordforge
+      POSTGRES_PASSWORD: wordforge_password
+      POSTGRES_DB: wordforge
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wordforge"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: wordforge_app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://wordforge:wordforge_password@postgres:5432/wordforge
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

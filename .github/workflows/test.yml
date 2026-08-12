@@ -1,0 +1,260 @@
+name: Security Test Suite
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit tests
+        run: npm run test
+
+      - name: Generate coverage
+        run: npm run test:coverage
+        continue-on-error: true
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        if: always()
+        with:
+          files: ./coverage/coverage-final.json
+          flags: unittests
+          name: codecov-umbrella
+
+  lint-and-type-check:
+    name: Lint & Type Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+        continue-on-error: true
+
+      - name: Type check
+        run: npm run type-check
+
+  build:
+    name: Build Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Create .env for build
+        run: |
+          cat > .env.local << EOF
+          DATABASE_URL=postgresql://user:password@localhost:5432/wordforge_test
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_dummy
+          CLERK_SECRET_KEY=sk_test_dummy
+          CLERK_WEBHOOK_SECRET=whsec_dummy
+          NEXT_PUBLIC_APP_URL=http://localhost:3000
+          NODE_ENV=production
+          EOF
+
+      - name: Build application
+        run: npm run build
+
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run npm audit
+        run: npm audit --audit-level=moderate
+        continue-on-error: true
+
+      - name: Check for high vulnerabilities
+        run: |
+          if npm audit | grep -q "high\|critical"; then
+            echo "::warning::High or critical vulnerabilities found"
+          fi
+
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: wordforge_test
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpass
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Create test .env
+        run: |
+          cat > .env.test << EOF
+          DATABASE_URL=postgresql://testuser:testpass@localhost:5432/wordforge_test
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_dummy
+          CLERK_SECRET_KEY=sk_test_dummy
+          CLERK_WEBHOOK_SECRET=whsec_dummy
+          NEXT_PUBLIC_APP_URL=http://localhost:3000
+          NODE_ENV=test
+          EOF
+
+      - name: Build application
+        run: npm run build
+
+      - name: Start dev server
+        run: npm run dev &
+        env:
+          PORT: 3000
+
+      - name: Wait for server to be ready
+        run: |
+          timeout 30 bash -c 'until curl -f http://localhost:3000/api/health; do sleep 1; done'
+
+      - name: Run integration tests
+        run: npm run test -- src/tests/integration/
+        env:
+          DATABASE_URL: postgresql://testuser:testpass@localhost:5432/wordforge_test
+
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Create test .env
+        run: |
+          cat > .env.test << EOF
+          DATABASE_URL=postgresql://testuser:testpass@localhost:5432/wordforge_test
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_dummy
+          CLERK_SECRET_KEY=sk_test_dummy
+          CLERK_WEBHOOK_SECRET=whsec_dummy
+          NEXT_PUBLIC_APP_URL=http://localhost:3000
+          NODE_ENV=test
+          EOF
+
+      - name: Build application
+        run: npm run build
+
+      - name: Start dev server
+        run: npm run dev &
+        env:
+          PORT: 3000
+
+      - name: Wait for server to be ready
+        run: |
+          timeout 30 bash -c 'until curl -f http://localhost:3000; do sleep 1; done'
+
+      - name: Run E2E tests
+        run: npm run test:e2e
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
+
+  results:
+    name: Test Results Summary
+    runs-on: ubuntu-latest
+    needs: [unit-tests, lint-and-type-check, build, security-audit, integration-tests, e2e-tests]
+    if: always()
+
+    steps:
+      - name: Check test results
+        run: |
+          echo "Test Suite Results:"
+          echo "- Unit Tests: ${{ needs.unit-tests.result }}"
+          echo "- Lint & Type Check: ${{ needs.lint-and-type-check.result }}"
+          echo "- Build: ${{ needs.build.result }}"
+          echo "- Security Audit: ${{ needs.security-audit.result }}"
+          echo "- Integration Tests: ${{ needs.integration-tests.result }}"
+          echo "- E2E Tests: ${{ needs.e2e-tests.result }}"
+
+      - name: Fail if critical tests failed
+        if: |
+          needs.unit-tests.result == 'failure' ||
+          needs.build.result == 'failure' ||
+          needs.lint-and-type-check.result == 'failure'
+        run: exit 1
