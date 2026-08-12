@@ -29,6 +29,9 @@ export const metadata: Metadata = {
   keywords: ['word game', 'puzzle', 'wordle', 'word puzzle', 'brain game'],
   authors: [{ name: 'WordForge Team' }],
   creator: 'WordForge',
+  icons: {
+    icon: '/favicon.svg',
+  },
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
   openGraph: {
     type: 'website',

@@ -68,6 +68,7 @@ const nextConfig = {
           // img-src: Allow images from self, data URLs, HTTPS (avatars)
           // connect-src: Allow API calls to self and Clerk
           // frame-src: Allow Clerk iframe widgets + Cloudflare challenges
+          // worker-src: Allow Clerk web workers
           // object-src 'none': Disable plugins (Flash, etc.)
           // base-uri 'self': Restrict <base> tag to same origin
           // form-action 'self': Restrict form submissions to same origin
@@ -83,6 +84,7 @@ const nextConfig = {
               "img-src 'self' data: https: blob:",
               "connect-src 'self' https://*.clerk.accounts.dev https://*.clerk.com https://api.clerk.com wss:",
               "frame-src 'self' https://challenges.cloudflare.com",
+              "worker-src 'self' blob:",
               "media-src 'self'",
               "object-src 'none'",
               "base-uri 'self'",
