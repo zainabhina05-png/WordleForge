@@ -32,7 +32,7 @@ export const metadata: Metadata = {
   icons: {
     icon: '/favicon.svg',
   },
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL?.startsWith('http') ? process.env.NEXT_PUBLIC_APP_URL : `https://${process.env.NEXT_PUBLIC_APP_URL || 'localhost:3000'}`),
   openGraph: {
     type: 'website',
     locale: 'en_US',
