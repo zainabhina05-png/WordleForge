@@ -1,0 +1,292 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  clerkId       String    @unique
+  email         String    @unique
+  username      String?   @unique
+  imageUrl      String?
+  firstName     String?
+  lastName      String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lastLoginAt   DateTime?
+
+  profile       Profile?
+  games         Game[]
+  statistics    Statistics?
+  achievements  UserAchievement[]
+  settings      UserSettings?
+  notifications Notification[]
+  friendsFrom   Friendship[]      @relation("FriendFrom")
+  friendsTo     Friendship[]      @relation("FriendTo")
+  reports       Report[]
+
+  @@index([clerkId])
+  @@index([email])
+  @@index([username])
+}
+
+model Profile {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bio             String?
+  level           Int      @default(1)
+  xp              Int      @default(0)
+  coins           Int      @default(0)
+  currentStreak   Int      @default(0)
+  bestStreak      Int      @default(0)
+  totalGames      Int      @default(0)
+  totalWins       Int      @default(0)
+  totalLosses     Int      @default(0)
+  averageGuesses  Float    @default(0)
+  fastestSolve    Int?
+  favoriteDifficulty String?
+  theme           String   @default("dark")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Game {
+  id            String     @id @default(cuid())
+  userId        String
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  wordId        String
+  word          Word       @relation(fields: [wordId], references: [id])
+  mode          String     @default("CLASSIC")
+  difficulty    String
+  status        String     @default("IN_PROGRESS")
+  guesses       Guess[]
+  currentRow    Int        @default(0)
+  maxAttempts   Int        @default(6)
+  startedAt     DateTime   @default(now())
+  completedAt   DateTime?
+  duration      Int?
+  won           Boolean    @default(false)
+  score         Int        @default(0)
+  hintsUsed     Int        @default(0)
+  timeLimit     Int?       // Time limit in seconds for TIME_ATTACK mode
+  timeRemaining Int?       // Calculated at game end; null if game in progress
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@index([userId])
+  @@index([wordId])
+  @@index([status])
+  @@index([mode])
+  @@index([completedAt])
+}
+
+model Guess {
+  id        String   @id @default(cuid())
+  gameId    String
+  game      Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  word      String
+  feedback  Json
+  position  Int
+  createdAt DateTime @default(now())
+
+  @@index([gameId])
+}
+
+model Word {
+  id          String     @id @default(cuid())
+  word        String     @unique
+  length      Int
+  difficulty  String
+  definition  String?
+  pronunciation String?
+  partOfSpeech String?
+  examples    String[]
+  synonyms    String[]
+  origin      String?
+  frequency   Int        @default(0)
+  games       Game[]
+  dailyWords  DailyWord[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([word])
+  @@index([difficulty])
+  @@index([length])
+}
+
+model DailyWord {
+  id        String   @id @default(cuid())
+  wordId    String
+  word      Word     @relation(fields: [wordId], references: [id])
+  date      DateTime @unique
+  createdAt DateTime @default(now())
+
+  @@index([date])
+  @@index([wordId])
+}
+
+model Statistics {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  gamesPlayed           Int      @default(0)
+  gamesWon              Int      @default(0)
+  gamesLost             Int      @default(0)
+  currentStreak         Int      @default(0)
+  maxStreak             Int      @default(0)
+  totalGuesses          Int      @default(0)
+  averageGuesses        Float    @default(0)
+  fastestWinSeconds     Int?
+  totalPlayTimeSeconds  Int      @default(0)
+  perfectGames          Int      @default(0)
+  guessDistribution     Json     @default("{\"1\":0,\"2\":0,\"3\":0,\"4\":0,\"5\":0,\"6\":0}")
+  winPercentage         Float    @default(0)
+  lastPlayedAt          DateTime?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Achievement {
+  id          String            @id @default(cuid())
+  name        String            @unique
+  title       String
+  description String
+  icon        String
+  category    String
+  requirement Int
+  xpReward    Int               @default(0)
+  coinReward  Int               @default(0)
+  rarity      String            @default("COMMON")
+  createdAt   DateTime          @default(now())
+  users       UserAchievement[]
+
+  @@index([category])
+  @@index([rarity])
+}
+
+model UserAchievement {
+  id            String      @id @default(cuid())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievementId String
+  achievement   Achievement @relation(fields: [achievementId], references: [id])
+  unlockedAt    DateTime    @default(now())
+  progress      Int         @default(0)
+
+  @@unique([userId, achievementId])
+  @@index([userId])
+  @@index([achievementId])
+}
+
+model Leaderboard {
+  id         String          @id @default(cuid())
+  userId     String
+  type       String
+  period     String
+  rank       Int
+  score      Int
+  metadata   Json?
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+
+  @@unique([userId, type, period])
+  @@index([type, period, rank])
+  @@index([userId])
+}
+
+model UserSettings {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  soundEnabled      Boolean  @default(true)
+  musicEnabled      Boolean  @default(false)
+  hintsEnabled      Boolean  @default(true)
+  darkMode          Boolean  @default(true)
+  colorBlindMode    Boolean  @default(false)
+  highContrastMode  Boolean  @default(false)
+  reducedMotion     Boolean  @default(false)
+  keyboardShortcuts Boolean  @default(true)
+  notifications     Boolean  @default(true)
+  emailNotifications Boolean @default(false)
+  language          String   @default("en")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([userId, read])
+  @@index([createdAt])
+}
+
+model Friendship {
+  id         String   @id @default(cuid())
+  fromUserId String
+  toUserId   String
+  fromUser   User     @relation("FriendFrom", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser     User     @relation("FriendTo", fields: [toUserId], references: [id], onDelete: Cascade)
+  status     String   @default("pending")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([fromUserId, toUserId])
+  @@index([fromUserId])
+  @@index([toUserId])
+}
+
+model Report {
+  id          String   @id @default(cuid())
+  reporterId  String
+  reporter    User     @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+  type        String
+  targetId    String
+  reason      String
+  description String?
+  status      String   @default("pending")
+  resolution  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([reporterId])
+  @@index([status])
+  @@index([type])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  entity    String
+  entityId  String?
+  metadata  Json?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([entity])
+  @@index([createdAt])
+}
+
+
