@@ -1,4 +1,4 @@
-# WordleForge
+<div class="center">WordleForge</div>
 
 A full-stack word puzzle platform built with Next.js 14, featuring multiple game modes, animated UI, and per-user statistics.
 
