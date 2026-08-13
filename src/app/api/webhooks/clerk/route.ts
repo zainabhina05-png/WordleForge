@@ -252,22 +252,31 @@ async function handleUserDeleted(evt: WebhookEvent) {
     throw new SecurityError('Missing or invalid user ID in webhook data', 'INVALID_WEBHOOK_DATA');
   }
 
-  // Soft delete user by anonymizing data instead of hard delete for data integrity
+  // GDPR Compliance: Hard delete user and all related data
+  // Prisma cascade delete (onDelete: Cascade) handles related records
   try {
-    await prisma.user.update({
+    await prisma.user.delete({
       where: { clerkId: id },
+      // Cascade deletes:
+      // - Profile, Statistics, UserSettings, UserAchievements
+      // - Games, Guesses, Notifications, Friendships
+      // - Reports, Leaderboard entries
+    });
+    
+    // Audit log for compliance tracking
+    await prisma.auditLog.create({
       data: {
-        email: `deleted_${Date.now()}@example.com`,
-        username: null,
-        firstName: null,
-        lastName: null,
-        imageUrl: null,
-        // Note: deletedAt field would need to be added to Prisma schema
-        updatedAt: new Date(),
+        action: 'USER_DELETED',
+        entity: 'User',
+        entityId: id,
+        metadata: {
+          deletedAt: new Date().toISOString(),
+          reason: 'User account deletion via Clerk webhook',
+        },
       },
     });
   } catch (error) {
-    dbLogger.dbError('user_soft_delete', error);
+    dbLogger.dbError('user_hard_delete', error);
     throw error;
   }
 }

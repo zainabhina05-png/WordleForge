@@ -2,6 +2,19 @@ import { headers } from 'next/headers';
 import { auth } from '@clerk/nextjs/server';
 import { ratelimit } from '@/lib/rate-limit';
 import { authLogger, rateLimitLogger } from '@/lib/logger';
+import { createHash } from 'crypto';
+
+// GDPR Compliance: Anonymize IP addresses before storage
+export function anonymizeIP(ip: string): string {
+  if (!ip || ip === 'unknown') return 'unknown';
+  
+  // Hash IP with salt for one-way anonymization
+  const salt = process.env.IP_ANONYMIZATION_SALT || 'default-salt-change-in-production';
+  return createHash('sha256')
+    .update(ip + salt)
+    .digest('hex')
+    .slice(0, 16); // 16 chars sufficient for rate limiting
+}
 
 // Fallback sanitization without DOMPurify for development
 function sanitizeInputFallback(input: string): string {
